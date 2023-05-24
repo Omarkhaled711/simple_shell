@@ -37,7 +37,8 @@ typedef struct Path_Dir
  * @argc: their count
  */
 
-typedef struct {
+typedef struct Argv
+{
 char **argv;
 unsigned int argc;
 } Argv;
@@ -50,7 +51,8 @@ unsigned int argc;
  * @counter: the counter
  * @status: the status
  */
-typedef struct Shell_Info {
+typedef struct Shell_Info
+{
 	Path_Dir *PATH;
 	char *name;
 	int counter;
@@ -60,7 +62,8 @@ typedef struct Shell_Info {
 extern char **environ;
 /*starting functions*/
 void start_interactive(Shell_Info *current, char *env[]);
-void start_non_interactive(int mode, Shell_Info *current, char **env, char **argv);
+void start_non_interactive(int mode, Shell_Info *current,
+							char **env, char **argv);
 
 /*string functions*/
 char *_strdup(char *str);
@@ -86,8 +89,9 @@ char **format_command(char *command, int status);
 void remove_comments(char *command);
 char *get_process_id();
 char *get_status(int status);
-void execute_builtin(int choose, char *command, char **formatted, Shell_Info *current);
-void print_env();
+void execute_builtin(int choose, char *command, char **formatted,
+						Shell_Info *current);
+void print_env(void);
 void execute_exit(char *command, char **formatted, Shell_Info *current);
 char *num_to_string(int num);
 int is_directory(char *file);
