@@ -26,5 +26,6 @@ int main(int argc, char *argv[], char *env[])
 	{
 		start_non_interactive(mode, &current, env, argv);
 	}
+	free_path_list(current.PATH);
 	exit(current.status);
 }
