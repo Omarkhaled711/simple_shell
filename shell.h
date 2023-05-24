@@ -107,5 +107,6 @@ char **get_from_piped();
 char **get_from_file(char *file_name, char *program_name);
 char *read_file(int file_descriptor, size_t file_size);
 void print_file_open_problem(char *program_name, char *file_name);
-
+char **text_to_commands(char *text);
+unsigned int count_char_pip_mode(char *str, char c);
 #endif

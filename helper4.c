@@ -21,47 +21,39 @@ char **get_non_interactive_commands(int mode, char *argv[])
 	}
 	return (commands);
 }
-/**
- * get_from_piped - Get data from piped terminal input
- *
- * Return: char**
- */
 
+/**
+ * get_from_piped - get input through pipes .
+ * Return: splitted commands
+ */
 char **get_from_piped()
 {
-	char input_buffer[INPUT_BUFFER_SIZE], *text, **commands;
-	ssize_t  bytes_read;
-	unsigned int total_characters = 0;
+	char input_buffer[INPUT_BUFFER_SIZE], *text, **lines;
+	ssize_t bytesRead;
+	size_t totalchar = 0;
 
-	while ((bytes_read = read(STDIN_FILENO, input_buffer, INPUT_BUFFER_SIZE)) > 0)
+	while ((bytesRead = read(STDIN_FILENO, input_buffer, INPUT_BUFFER_SIZE)) > 0)
 	{
-		total_characters += bytes_read;
+		totalchar += bytesRead;
 	}
-	switch (bytes_read)
+	if (bytesRead == -1)
 	{
-		case -1:
 		perror("read");
 		exit(-1);
-		break;
-		case 0:
-		input_buffer[total_characters] = 0;
-		break;
-		default:
-		if (total_characters > INPUT_BUFFER_SIZE)
-			input_buffer[INPUT_BUFFER_SIZE - 1] = 0;
-		else
-			input_buffer[total_characters - 1] = 0;
-		break;
 	}
-	text = malloc(sizeof(char) * (total_characters + 1));
+	if (totalchar > INPUT_BUFFER_SIZE)
+		input_buffer[INPUT_BUFFER_SIZE - 1] = '\0';
+	else
+		input_buffer[totalchar - 1] = '\0';
+
+	text = malloc(sizeof(char) * (totalchar));
 	if (!text)
 		return (NULL);
-	_memcpy(text, input_buffer, total_characters);
-	text[total_characters] = 0;
-	commands = _strsplit(text, "\n");
-	return (commands);
+	text = _strdup(input_buffer);
+	if (text)
+		lines = text_to_commands(text);
+	return (lines);
 }
-
 
 /**
  * get_from_file -  Gets data from file object
