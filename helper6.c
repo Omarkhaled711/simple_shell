@@ -52,3 +52,18 @@ unsigned int count_char_pip_mode(char *str, char c)
 	}
 	return (count + 1);
 }
+/**
+ * print_file_open_problem - file isn't possible to open
+ *
+ * @program_name: the program name
+ * @file_name: the file name
+ * Return: void
+ */
+void print_file_open_problem(char *program_name, char *file_name)
+{
+	print_error_header(program_name, 0);
+	write(STDERR_FILENO, "Can't open ", 11);
+	write(STDERR_FILENO, file_name, _strlen(file_name));
+	write(STDERR_FILENO, "\n", 1);
+}
+

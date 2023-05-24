@@ -34,7 +34,7 @@ int get_mode(int argc)
  */
 void exit_shell(Path_Dir *PATH, int x)
 {
-	free(PATH);
+	free_path_list(PATH);
 	exit(x);
 }
 /**

@@ -19,39 +19,62 @@ char **get_non_interactive_commands(int mode, char *argv[])
 	{
 		commands = get_from_file(argv[0], argv[1]);
 	}
+	if (!commands)
+		exit(0);
 	return (commands);
 }
 
+/**
+ * my_isspace - check for spaces and empty strings
+ *
+ * @c: the char to check
+ * Return: int
+ */
+int my_isspace(int c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r'
+			 || c == '\f' || c == '\v');
+}
 /**
  * get_from_piped - get input through pipes .
  * Return: splitted commands
  */
 char **get_from_piped()
 {
-	char input_buffer[INPUT_BUFFER_SIZE], *text, **lines;
-	ssize_t bytesRead;
-	size_t totalchar = 0;
+	char buffer[2048], *input = NULL, **lines = NULL;
+	ssize_t bytes_read;
+	size_t total_chars = 0;
+	int i, has_input = 0;
 
-	while ((bytesRead = read(STDIN_FILENO, input_buffer, INPUT_BUFFER_SIZE)) > 0)
-	{
-		totalchar += bytesRead;
-	}
-	if (bytesRead == -1)
+	while ((bytes_read = read(STDIN_FILENO, buffer, 2048)) > 0)
+		total_chars += bytes_read;
+	if (bytes_read == -1)
 	{
 		perror("read");
 		exit(-1);
 	}
-	if (totalchar > INPUT_BUFFER_SIZE)
-		input_buffer[INPUT_BUFFER_SIZE - 1] = '\0';
+	if (total_chars > 2048)
+		buffer[2047] = '\0';
 	else
-		input_buffer[totalchar - 1] = '\0';
-
-	text = malloc(sizeof(char) * (totalchar));
-	if (!text)
+		buffer[total_chars - 1] = '\0';
+	for (i = 0; buffer[i]; i++)
+	{
+		if (!my_isspace(buffer[i]))
+		{
+			has_input = 1;
+			break;
+		}
+	}
+	if (!has_input)
 		return (NULL);
-	text = _strdup(input_buffer);
-	if (text)
-		lines = text_to_commands(text);
+	total_chars = _strlen(buffer);
+	input = (char *)malloc((total_chars + 1) * sizeof(char));
+	if (input != NULL)
+	{
+		_strcpy(input, buffer);
+		input[total_chars] = '\0';
+		lines = text_to_commands(input);
+	}
 	return (lines);
 }
 
@@ -115,18 +138,4 @@ char *read_file(int file_descriptor, size_t file_size)
 	}
 	buffer[bytes_read] = '\0';
 	return (buffer);
-}
-/**
- * print_file_open_problem - file isn't possible to open
- *
- * @program_name: the program name
- * @file_name: the file name
- * Return: void
- */
-void print_file_open_problem(char *program_name, char *file_name)
-{
-	print_error_header(program_name, 0);
-	write(STDERR_FILENO, "Can't open ", 11);
-	write(STDERR_FILENO, file_name, _strlen(file_name));
-	write(STDERR_FILENO, "\n", 1);
 }
