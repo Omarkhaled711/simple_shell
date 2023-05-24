@@ -94,8 +94,7 @@ void print_error(Shell_Info *current, char *command, int error_type)
 	switch (error_type)
 	{
 		case NOT_FOUND:
-			write(STDERR_FILENO, command, _strlen(command));
-			write(STDERR_FILENO, ": not found\n", 12);
+			write(STDERR_FILENO, "not found\n", 10);
 			break;
 		case NO_PERMISSION:
 			write(STDERR_FILENO, "Permission denied\n", 18);
@@ -110,11 +109,9 @@ void print_error(Shell_Info *current, char *command, int error_type)
 			break;
 	}
 
-	/*
-	*if (error_type != EXIT_WITH_ERROR)
-	*{
-	*	write(STDERR_FILENO, command, _strlen(command));
-	*	write(STDERR_FILENO, ": ", 2);
-	*}
-	*/
+	if (error_type != EXIT_WITH_ERROR)
+	{
+		write(STDERR_FILENO, command, _strlen(command));
+		write(STDERR_FILENO, ": ", 2);
+	}
 }
