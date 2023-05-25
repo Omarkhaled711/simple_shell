@@ -75,7 +75,7 @@ void process_command(char **formatted, char *env[], Shell_Info *current)
 
 	if (access(formatted[0], X_OK) == 0)
 	{
-		run_command(formatted[0], formatted, env, current->status);
+		run_command(formatted[0], formatted, env, &(current->status));
 		return;
 	}
 	find_path = check_PATH(formatted[0], current->PATH);
