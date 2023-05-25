@@ -87,39 +87,8 @@ char **get_from_piped()
  */
 char **get_from_file(char *file_name, char *program_name)
 {
-	struct stat fileStat;
-	char *text = NULL;
-	char **lines = NULL;
-	int file_descriptor;
-	ssize_t letters;
-
-
-	if (stat(file_name, &fileStat) == -1)
-	{
-		print_file_open_problem(program_name, file_name);
-		exit(127);
-	}
-
-	if (!S_ISREG(fileStat.st_mode))
-		exit(0);
-
-	file_descriptor = open(file_name, O_RDONLY);
-	if (file_descriptor == -1)
-		exit(-1);
-
-	if (fileStat.st_size == 0)
-		exit(0);
-
-	text = malloc((fileStat.st_size + 1) * sizeof(*text));
-	if (!text)
-		return (NULL);
-	letters = read(file_descriptor, text, fileStat.st_size);
-	if (letters == -1)
-		perror("read");
-	close(file_descriptor);
-	text[letters] = '\0';
-	lines = text_to_commands(text);
-	free(text);
-	return (lines);
+	(void) file_name;
+	(void) program_name;
+	exit(127);
 }
 
