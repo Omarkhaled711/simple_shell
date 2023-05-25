@@ -73,17 +73,22 @@ void process_command(char **formatted, char *env[], Shell_Info *current)
 {
 	char *find_path = NULL;
 
-	current->status = 0;
 	if (access(formatted[0], X_OK) == 0)
 	{
 		run_command(formatted[0], formatted, env, current->status);
 		return;
 	}
 	find_path = check_PATH(formatted[0], current->PATH);
-	if (find_path != NULL)
+	if (find_path)
 	{
 		run_command(find_path, formatted, env, current->status);
 		free(find_path);
+		return;
+	}
+	if (access(formatted[0], F_OK) == 0)
+	{
+		print_error(current, formatted[0], NO_PERMISSION);
+		current->status = NO_PERMISSION;
 		return;
 	}
 	print_error(current, formatted[0], NOT_FOUND);

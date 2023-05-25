@@ -27,7 +27,7 @@ void execute_builtin(int choose, char *command, char **formatted,
 {
 	if (choose == ENV_BUILTIN)
 	{
-		print_env();
+		print_env(&(current->status));
 	}
 	else if (choose == EXIT_BUILTIN)
 	{
@@ -37,29 +37,31 @@ void execute_builtin(int choose, char *command, char **formatted,
 
 /**
  * print_env - prints the environment variables
+ * @status: the status of the system
  * Return: void
  */
-void print_env(void)
+void print_env(int *status)
 {
 	int i;
-	char newline = '\n';
 
 	for (i = 0; environ[i] != NULL; i++)
 	{
 		write(STDOUT_FILENO, environ[i], _strlen(environ[i]));
-		write(STDOUT_FILENO, &newline, 1);
+		write(STDOUT_FILENO, "\n", 1);
+
 	}
+	*status = 0;
 }
 
 /**
- * free_all - a wrapper function for freeing funcs
+ * free_everything - a wrapper function for freeing funcs
  *
  * @command: the command
  * @formatted: the formatted command
  * @PATH: the list of directories of path
  * Return: void
  */
-void free_all(char *command, char **formatted, Path_Dir *PATH)
+void free_everything(char *command, char **formatted, Path_Dir *PATH)
 {
 	free(command);
 	free_path_list(PATH);
@@ -78,7 +80,7 @@ void execute_exit(char *command, char **formatted, Shell_Info *current)
 
 	if (formatted[1] == NULL)
 	{
-		free_all(command, formatted, current->PATH);
+		free_everything(command, formatted, current->PATH);
 		exit(current->status);
 	}
 
@@ -96,6 +98,6 @@ void execute_exit(char *command, char **formatted, Shell_Info *current)
 		print_error(current, formatted[1], EXIT_WITH_ERROR);
 		return;
 	}
-	free_all(command, formatted, current->PATH);
+	free_everything(command, formatted, current->PATH);
 	exit(n);
 }

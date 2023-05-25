@@ -91,7 +91,7 @@ char *get_process_id();
 char *get_status(int status);
 void execute_builtin(int choose, char *command, char **formatted,
 						Shell_Info *current);
-void print_env(void);
+void print_env(int *status);
 void execute_exit(char *command, char **formatted, Shell_Info *current);
 char *num_to_string(int num);
 int is_directory(char *file);

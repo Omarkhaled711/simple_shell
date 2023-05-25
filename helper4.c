@@ -41,20 +41,20 @@ int my_isspace(int c)
  */
 char **get_from_piped()
 {
-	char buffer[2048], *input = NULL, **lines = NULL;
+	char buffer[INPUT_BUFFER_SIZE], *input = NULL, **lines = NULL;
 	ssize_t bytes_read;
 	size_t total_chars = 0;
 	int i, has_input = 0;
 
-	while ((bytes_read = read(STDIN_FILENO, buffer, 2048)) > 0)
+	while ((bytes_read = read(STDIN_FILENO, buffer, INPUT_BUFFER_SIZE)) > 0)
 		total_chars += bytes_read;
 	if (bytes_read == -1)
 	{
 		perror("read");
 		exit(-1);
 	}
-	if (total_chars > 2048)
-		buffer[2047] = '\0';
+	if (total_chars > INPUT_BUFFER_SIZE)
+		buffer[INPUT_BUFFER_SIZE - 1] = '\0';
 	else
 		buffer[total_chars - 1] = '\0';
 	for (i = 0; buffer[i]; i++)
@@ -88,54 +88,38 @@ char **get_from_piped()
 char **get_from_file(char *file_name, char *program_name)
 {
 	struct stat fileStat;
-	char *text, **commands;
+	char *text = NULL;
+	char **lines = NULL;
 	int file_descriptor;
+	ssize_t letters;
+
 
 	if (stat(file_name, &fileStat) == -1)
 	{
 		print_file_open_problem(program_name, file_name);
-		exit(NOT_FOUND);
+		exit(127);
 	}
+
 	if (!S_ISREG(fileStat.st_mode))
 		exit(0);
+
 	file_descriptor = open(file_name, O_RDONLY);
 	if (file_descriptor == -1)
-	{
-		perror("read");
 		exit(-1);
-	}
-	text = read_file(file_descriptor, fileStat.st_size);
+
+	if (fileStat.st_size == 0)
+		exit(0);
+
+	text = malloc((fileStat.st_size + 1) * sizeof(*text));
 	if (!text)
-	{
+		return (NULL);
+	letters = read(file_descriptor, text, fileStat.st_size);
+	if (letters == -1)
 		perror("read");
-		exit(-1);
-	}
 	close(file_descriptor);
-	commands = _strsplit(text, "\n");
-	return (commands);
+	text[letters] = '\0';
+	lines = text_to_commands(text);
+	free(text);
+	return (lines);
 }
 
-/**
- * read_file - read data from file
- *
- * @file_descriptor: the descriptor of the file
- * @file_size: the size of the file
- * Return: char*
- */
-char *read_file(int file_descriptor, size_t file_size)
-{
-	char *buffer = malloc(file_size + 1);
-	int bytes_read;
-
-	if (!buffer)
-		exit(-1);
-	bytes_read = read(file_descriptor, buffer, file_size);
-
-	if (bytes_read == -1)
-	{
-		perror("read");
-		exit(-1);
-	}
-	buffer[bytes_read] = '\0';
-	return (buffer);
-}
