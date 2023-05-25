@@ -9,7 +9,7 @@
  * Return: void
  */
 
-void run_command(char *path, char **command, char **env, int status)
+void run_command(char *path, char **command, char **env, int *status)
 {
 	pid_t pid;
 
@@ -22,13 +22,12 @@ void run_command(char *path, char **command, char **env, int status)
 	if (pid == 0)
 	{
 		execve(path, command, env);
-		perror("execve");
 		exit(EXIT_FAILURE);
 	}
 	else if (pid > 0)
 	{
-		waitpid(pid, &status, WUNTRACED);
-		status  = WEXITSTATUS(status);
+		waitpid(pid, status, WUNTRACED);
+		*status  = WEXITSTATUS(*status);
 	}
 }
 
@@ -91,27 +90,19 @@ void print_error(Shell_Info *current, char *command, int error_type)
 {
 	print_error_header(current->name, current->counter);
 
-	switch (error_type)
-	{
-		case NOT_FOUND:
-			write(STDERR_FILENO, "not found\n", 10);
-			break;
-		case NO_PERMISSION:
-			write(STDERR_FILENO, "Permission denied\n", 18);
-			break;
-		case EXIT_WITH_ERROR:
-			write(STDERR_FILENO, "exit", 4);
-			write(STDERR_FILENO, ": Illegal number: ", 19);
-			write(STDERR_FILENO, command, _strlen(command));
-			write(STDERR_FILENO, "\n", 1);
-			break;
-		default:
-			break;
-	}
-
-	if (error_type != EXIT_WITH_ERROR)
-	{
+	if (error_type == 2)
+		write(STDERR_FILENO, "exit", 4);
+	else
 		write(STDERR_FILENO, command, _strlen(command));
-		write(STDERR_FILENO, ": ", 2);
+	write(STDERR_FILENO, ": ", 2);
+	if (error_type == NOT_FOUND)
+		write(STDERR_FILENO, "not found\n", 10);
+	else if (error_type == NO_PERMISSION)
+		write(STDERR_FILENO, "Permission denied\n", 18);
+	else if (error_type == 2)
+	{
+		write(STDERR_FILENO, "Illegal number: ", 16);
+		write(STDERR_FILENO, command, _strlen(command));
+		write(STDERR_FILENO, "\n", 1);
 	}
 }

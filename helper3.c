@@ -81,7 +81,7 @@ void process_command(char **formatted, char *env[], Shell_Info *current)
 	find_path = check_PATH(formatted[0], current->PATH);
 	if (find_path)
 	{
-		run_command(find_path, formatted, env, current->status);
+		run_command(find_path, formatted, env, &(current->status));
 		free(find_path);
 		return;
 	}

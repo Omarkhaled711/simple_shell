@@ -100,7 +100,7 @@ char *check_PATH(char *command, Path_Dir *PATH);
 char *_getenv(const char *name);
 void print_error_header(char *name, int counter);
 void print_error(Shell_Info *current, char *command, int error_type);
-void run_command(char *path, char **command, char **env, int status);
+void run_command(char *path, char **command, char **env, int *status);
 int check_builtin(char *cmd);
 char **get_non_interactive_commands(int mode, char *argv[]);
 char **get_from_piped();
