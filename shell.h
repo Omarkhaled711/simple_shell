@@ -131,7 +131,7 @@ char *error_exit(Shell_Info *shell);
 char *error_get_cd(Shell_Info *shell);
 char *concat_cd(Shell_Info *shell, char *msg, char *error, char *counter);
 separator_list_node_t *add_separator_node(separator_list_node_t **list_head,
-											char separator);
+						char separator);
 commands_list_node_t *add_command_node(commands_list_node_t **list_head,
 						char *command_line);
 void add_sep_nodes(separator_list_node_t **head_s, char *input);
