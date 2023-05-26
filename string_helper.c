@@ -6,7 +6,7 @@
  * @s: the string to find its length
  * Return: the length of s
  */
-unsigned int _strlen(char *s)
+unsigned int _strlen(const char *s)
 {
 	unsigned int i;
 
@@ -67,26 +67,6 @@ int _strcmp(char *s1, char *s2)
 		}
 	}
 	return (s1[i] - s2[i]);
-}
-/**
- * free_string_array - frees an array of strings allocated with malloc()
- * @array: pointer to the array of strings
- */
-void free_string_array(char **array)
-{
-	unsigned int i;
-
-	if (array == NULL)
-	{
-		return;
-	}
-
-	for (i = 0; array[i]; i++)
-	{
-		free(array[i]);
-	}
-
-	free(array);
 }
 /**
  * _atoi - convert number inside a string into int

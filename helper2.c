@@ -1,148 +1,170 @@
 #include "shell.h"
 
 /**
- * process_token - Processes a token and returns a command string.
- * @token: The token to process.
- * @status: The exit status of the previous command.
- * Return: A command string, or NULL on failure.
-*/
-char *process_token(char *token, int status)
-{
-	char *command;
-
-	if (_strcmp("$?", token) == 0)
-		command = get_status(status);
-	else if (_strcmp("$$", token) == 0)
-		command = get_process_id();
-	else
-		command = _strdup(token);
-	return (command);
-}
-/**
- * free_argv - frees the memory allocated for the argv array and its contents
- * @av: pointer to the Argv struct
+ * get_first_character_index - Finds the index of the first
+ * non-whitespace character
+ *
+ * @input_string: The input string
+ * @first_char_index: Pointer to the index of the first
+ * non-whitespace character
+ *
+ * Return: 0 on success, -1 if the first non-whitespace character is
+ * a separator operator
  */
-void free_argv(Argv *av)
+int get_first_character_index(char *input_string, int *first_char_index)
 {
-	unsigned int i;
-
-	if (av == NULL)
+	for (*first_char_index = 0; input_string[*first_char_index];
+			(*first_char_index)++)
 	{
-		return;
-	}
+		if (input_string[*first_char_index] == ' '
+			|| input_string[*first_char_index] == '\t')
+			continue;
 
-	if (av->argv != NULL)
-	{
-		for (i = 0; i < av->argc; i++)
-		{
-			free(av->argv[i]);
-		}
-		free(av->argv);
-	}
+		if (input_string[*first_char_index] == ';'
+			|| input_string[*first_char_index] == '|'
+				|| input_string[*first_char_index] == '&')
+			return (-1);
 
-	av->argv = NULL;
-	av->argc = 0;
+		break;
+	}
+	return (0);
 }
 /**
- * _realloc - similar to the realloc funtionin the stldib.h
- * @ptr: pointer to the existing memory
- * @old_size: old size
- * @new_size: new size
- * Return: a void pointer
+ * print_syntax_error - Prints a syntax error message
+ *
+ * @shell_info: Pointer to the shell data structure
+ * @input: The input string that caused the syntax error
+ * @error_index: The index of the error in the input string
+ * @is_operator_error: A flag indicating whether the syntax error is
+ * related to an operator
+ *
+ * Return: No return value
  */
-void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size)
+void print_syntax_error(Shell_Info *shell_info, char *input, int error_index,
+						int is_operator_error)
 {
-	unsigned int i;
-	void *p;
-	char *access1, *access2;
+char *operator_str, *prefix, *suffix, *error_msg, *counter_str;
+int error_msg_len;
 
-	if (old_size == new_size)
-		return (ptr);
-	if (new_size == 0 && ptr != NULL)
-	{	free(ptr);
-		return (NULL);
-	}
-	p = malloc(new_size);
-	if (p == 0)
-		return (NULL);
-	access1 = p;
-	access2 = ptr;
-	if (old_size > new_size)
-		old_size = new_size;
-	for (i = 0; i < old_size && ptr != NULL; i++)
-		access1[i] = access2[i];
-	if (p != ptr)
-		free(ptr);
-	return (p);
+if (is_operator_error)
+	operator_str = (input[error_index + 1] == ';' ? ";;" : ";");
+else if (input[error_index] == '|')
+	operator_str = (input[error_index + 1] == '|' ? "||" : "|");
+else if (input[error_index] == '&')
+	operator_str = (input[error_index + 1] == '&' ? "&&" : "&");
+else
+	operator_str = "";
+prefix = ": Syntax error: \"";
+suffix = "\" unexpected\n";
+counter_str = num_to_string(shell_info->counter);
+error_msg_len = _strlen(shell_info->argv[0]) + _strlen(counter_str) +
+				_strlen(operator_str) + _strlen(prefix) + _strlen(suffix) + 2;
 
+error_msg = malloc(error_msg_len + 1);
+if (error_msg != NULL)
+{
+	_strcpy(error_msg, shell_info->argv[0]);
+	_strcat(error_msg, ": ");
+	_strcat(error_msg, counter_str);
+	_strcat(error_msg, prefix);
+	_strcat(error_msg, operator_str);
+	_strcat(error_msg, suffix);
+
+	write(STDERR_FILENO, error_msg, error_msg_len);
+
+	free(error_msg);
 }
+free(counter_str);
+}
+
 /**
- * split_command - Splits a string into tokens and returns an array of
- *  pointers to each token.\
- * @command: The string to tokenize.
- * @status: The exit status of the previous command.
- * Return: An Argv struct containing the array of tokens and their count.
-*/
-Argv split_command(char *command, int status)
+ * get_error_operator_index - Get the error operator index object
+ *
+ * @input_string: input str
+ * @i: int
+ * @last: int
+ * Return: int
+ */
+int get_error_operator_index(char *input_string, int i, char last)
 {
-	Argv av = {0};
-	char *command_cpy, *token, *cmd;
+	int count;
 
-	command_cpy = _strdup(command);
-	if (command_cpy == NULL)
-		return (av); /* empty Argv */
-	token = strtok(command_cpy, TOK_DELIM);
-	while (token != NULL)
+	count = 0;
+	if (*input_string == '\0')
+		return (0);
+	switch (*input_string)
 	{
-		cmd = process_token(token, status);
-		if (cmd == NULL)
-		{
-			free_argv(&av);
-			free(command_cpy);
-			return (av); /*empty Argv */
-		}
-		av.argv = _realloc(av.argv, (av.argc) * sizeof(char *),
-							(av.argc + 1) * sizeof(char *));
-		if (av.argv == NULL)
-		{
-			free_argv(&av);
-			free(command_cpy);
-			return (av); /* empty Argv */
-		}
-		av.argv[av.argc++] = cmd;
-		token = strtok(NULL, TOK_DELIM);
+		case ' ':
+		case '\t':
+			return (get_error_operator_index(input_string + 1, i + 1, last));
+		case ';':
+			if (last == '|' || last == '&' || last == ';')
+				return (i);
+			break;
+		case '|':
+			if (last == ';' || last == '&')
+				return (i);
+			if (last == '|')
+			{
+				count = repeated_char(input_string);
+				if (count == 0 || count > 1)
+					return (i);
+			}
+			break;
+		case '&':
+			if (last == ';' || last == '|')
+				return (i);
+			if (last == '&')
+			{
+				count = repeated_char(input_string);
+				if (count == 0 || count > 1)
+					return (i);
+			}
+			break;
+		default:
+			break;
 	}
-	av.argv = _realloc(av.argv, av.argc * sizeof(char *),
-							(av.argc + 1) * sizeof(char *));
-	if (av.argv == NULL)
-	{
-		free_argv(&av);
-		free(command_cpy);
-		return (av); /* empty Argv */
-	}
-	av.argv[av.argc] = NULL;
-	free(command_cpy);
-	return (av);
+	return (get_error_operator_index(input_string + 1, i + 1, *input_string));
 }
+
 /**
- * format_command - Splits a string into tokens and returns an array of
- *  pointers to each token.
- * @command: The string to tokenize.
- * @status: The exit status of the previous command.
- * Return: An array of pointers to the tokens, or NULL on failure.
-*/
-char **format_command(char *command, int status)
+ * replace_variables - expanding commands if they cotain $
+ *
+ * @input: input command
+ * @shell_info: info about shell
+ * Return: char pointer (string)
+ */
+char *replace_variables(char *input, Shell_Info *shell_info)
 {
-	Argv av = split_command(command, status);
-	char **argv;
+	variable_list_t *head, *current;
+	char *status_str, *modified_input;
+	int original_len, new_len;
 
-	if (av.argv == NULL)
-		return (NULL);
+	head = NULL;
+	status_str = num_to_string(shell_info->status);
+	original_len = check_variables(&head, input, status_str, shell_info);
 
-	argv = av.argv;
+	if (head == NULL)
+	{
+		free(status_str);
+		return (input);
+	}
+	current = head;
+	new_len = 0;
+	while (current != NULL)
+	{
+		new_len += (current->val_len - current->var_len);
+		current = current->next;
+	}
+	new_len += original_len;
+	modified_input = malloc(sizeof(char) * (new_len + 1));
+	modified_input[new_len] = 0;
+	replace_input(&head, input, modified_input, new_len);
 
-	av.argv = NULL; /*prevent argv from being freed */
+	free(input);
+	free(status_str);
+	free_variable_list(&head);
 
-	free_argv(&av);
-	return (argv);
+	return (modified_input);
 }
+

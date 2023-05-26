@@ -1,69 +1,118 @@
 #include "shell.h"
 
 /**
- * text_to_commands - convert piped texts to commands
- * @text: the piped text
- * Return: splitted commands
+ * print_env - Prints the environment variables.
+ * @shell: A pointer to the Shell_Info struct.
+ * Return: 1 on success, 0 on failure.
  */
-char **text_to_commands(char *text)
+int print_env(Shell_Info *shell)
 {
-	char *token, *cmd, *copy_txt;
-	char **lines;
-	int i = 0;
-	unsigned int c_count;
+	unsigned int i, j;
 
-	copy_txt = _strdup(text);
-	if (copy_txt == NULL)
-		return (NULL);
-	c_count = count_char_pip_mode(copy_txt, '\n');
-	lines = malloc(c_count * sizeof(char *));
-	token = strtok(copy_txt, "\n");
-	cmd = _strdup(token);
-	lines[i++] = cmd;
-	while (token != NULL)
+	if (shell == NULL || shell->env == NULL)
 	{
-		token = strtok(NULL, "\n");
-		if (token != NULL)
+		return (0);
+	}
+
+	for (i = 0; shell->env[i] != NULL; i++)
+	{
+		j = 0;
+		while (shell->env[i][j] != '\0')
 		{
-			cmd = _strdup(token);
-			lines[i++] = cmd;
+			j++;
+		}
+		write(STDOUT_FILENO, shell->env[i], j);
+		write(STDOUT_FILENO, "\n", 1);
+	}
+
+	shell->status = 0;
+	return (1);
+}
+/**
+ * exit_shell - Exits the shell with the specified status code.
+ * @shell: A pointer to the Shell_Info struct.
+ * Return: 0 on success, 1 on failure.
+*/
+int exit_shell(Shell_Info *shell)
+{
+	if (shell == NULL || shell->args == NULL)
+	{
+		return (1);
+	}
+
+	if (shell->args[1] != NULL)
+	{
+		unsigned int max_status, sh_status;
+		int is_digit, str_len;
+
+		max_status = (unsigned int)INT_MAX;
+		sh_status = _atoi(shell->args[1]);
+		is_digit = _isdigit(shell->args[1]);
+		str_len = _strlen(shell->args[1]);
+
+		if (!is_digit || str_len > 10 || sh_status > max_status)
+		{
+			get_error(shell, 2);
+			shell->status = 2;
+			return (1);
+		}
+		if (sh_status > max_status)
+		{
+			shell->status = sh_status % 256;
+		}
+		else
+		{
+			shell->status = (int)sh_status % 256;
 		}
 	}
-	free(text);
-	return (lines);
-}
 
-/**
- * count_char_pip_mode - helper function
- *
- * @str: the text
- * @c: character
- * Return: count
- */
-unsigned int count_char_pip_mode(char *str, char c)
-{
-	unsigned int count = 0;
-
-	while (*str != '\0')
-	{
-		if (*str != c)
-			count++;
-		str++;
-	}
-	return (count + 1);
+	return (0);
 }
 /**
- * print_file_open_problem - file isn't possible to open
- *
- * @program_name: the program name
- * @file_name: the file name
+ * free_variable_list - Deallocates memory for a linked list of variables.
+ * @head: A pointer to the head of the linked list.
  * Return: void
- */
-void print_file_open_problem(char *program_name, char *file_name)
+*/
+void free_variable_list(variable_list_t **head)
 {
-	print_error_header(program_name, 0);
-	write(STDERR_FILENO, "Can't open ", 11);
-	write(STDERR_FILENO, file_name, _strlen(file_name));
-	write(STDERR_FILENO, "\n", 1);
+	variable_list_t *curr;
+
+	if (head == NULL || *head == NULL)
+	{
+		return;
+	}
+	curr = *head;
+	while (curr != NULL)
+	{
+		variable_list_t *temp = curr;
+
+		curr = curr->next;
+		free(temp);
+	}
+	*head = NULL;
 }
+/**
+ * cd_command - Changes the current directory.
+ *
+ * @shell - A pointer to the Shell_Info struct.
+ * Return: 1 on success, 0 on failure.
+ * int cd_command(Shell_Info *shell)
+ * {
+ * char *dir = shell->args[1];
+ * if (dir == NULL || _strcmp("$HOME", dir) == 0 || _strcmp("~", dir) == 0
+ *			|| _strcmp("--", dir) == 0)
+ * {
+ * return cd_home(shell);
+ * }
+ * if (_strcmp("-", dir) == 0)
+ * {
+ * return cd_pre(shell);
+ * }
+ * if (_strcmp(".", dir) == 0 || _strcmp("..", dir) == 0)
+ * {
+ * return cd_dot(shell);
+ * }
+ * return cd_to(shell);
+ * }
+*/
 

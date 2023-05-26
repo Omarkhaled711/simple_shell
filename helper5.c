@@ -1,108 +1,118 @@
 #include "shell.h"
 
 /**
- * run_command - executes the command.
- * @path: the path of the program
- * @command: the command provided to the shell
- * @env: as the name suggests
- * @status: as the name suggests
- * Return: void
+ * realloc_double_pointer - reallocates a memory block for double ptr.
+ * @ptr: double ptr to the memory previously allocated.
+ * @old_size: old size
+ * @new_size: new size.
+ * Return: a ptr
  */
-
-void run_command(char *path, char **command, char **env, int *status)
+char **realloc_double_pointer(char **ptr, unsigned int old_size,
+				unsigned int new_size)
 {
-	pid_t pid;
+	char **new_ptr;
+	unsigned int i;
 
-	pid = fork();
-	if (pid == -1)
+	if (ptr == NULL)
 	{
-		perror("fork");
-		exit(EXIT_FAILURE);
+		return (malloc(sizeof(char *) * new_size));
 	}
-	if (pid == 0)
-	{
-		execve(path, command, env);
-		exit(EXIT_FAILURE);
-	}
-	else if (pid > 0)
-	{
-		waitpid(pid, status, WUNTRACED);
-		*status  = WEXITSTATUS(*status);
-	}
-}
 
-/**
- * _getenv - retrieves the value of the environment variable 'name'
- * @name: the name of the environment variable to retrieve
- *
- * Return: a pointer to the value of the environment variable, or NULL if the
- * variable is not found
- */
-char *_getenv(const char *name)
-{
-	int i, j;
-
-	if (name == NULL)
+	if (new_size == old_size)
+	{
+		return (ptr);
+	}
+	new_ptr = malloc(sizeof(char *) * new_size);
+	if (new_ptr == NULL)
+	{
 		return (NULL);
-
-	for (i = 0; environ[i] != NULL; i++)
+	}
+	for (i = 0; i < old_size; i++)
 	{
-		for (j = 0; environ[i][j] != '=' && name[j] != '\0'; j++)
-		{
-			if (environ[i][j] != name[j])
-				break;
-		}
+		new_ptr[i] = ptr[i];
+	}
+	free(ptr);
+	return (new_ptr);
+}
+/**
+ * _isdigit - Checks if a string is of decimal digits.
+ *
+ * @c:  The string to check.
+ * Return: 1 if the character is a decimal digit, 0 otherwise.
+ */
+int _isdigit(const char *c)
+{
+	int i;
 
-		if (environ[i][j] == '=' && name[j] == '\0')
+	for (i = 0; c[i]; i++)
+	{
+		if (c[i] < '0' || c[i] > '9')
 		{
-			return (&environ[i][j + 1]);
+			return (0);
+		}
+	}
+	return (1);
+}
+/**
+ * repeated_char - counts the repetitions of a char
+ *
+ * @input: input string
+ * Return: the repetitions
+ */
+int repeated_char(char *input)
+{
+	int i;
+
+	for (i = 0; *(input - 1) == *input; input--, i++)
+		continue;
+	return (i);
+}
+
+/**
+ * compare_env - compares the env var names
+ * with the name passed.
+ * @env_name: name of the environment variable
+ * @name: the name passed
+ *
+ * Return: 0 if are not equal. Another value if they are.
+ */
+int compare_env(const char *env_name, const char *name)
+{
+	int i;
+
+	for (i = 0; env_name[i] != '='; i++)
+	{
+		if (env_name[i] != name[i])
+		{
+			return (0);
 		}
 	}
 
-	return (NULL);
+	return (i + 1);
 }
 /**
- * print_error_header - prints error header
+ * _getenv - get an environment variable
+ * @name: name of the environment variable
+ * @_environ: environment variable
  *
- * @name: name
- * @counter: the line at which the error occured
+ * Return: value of the environment variable if found, or NULL if not found.
  */
-void print_error_header(char *name, int counter)
+char *_getenv(const char *name, char **_environ)
 {
-	char *counter_string = num_to_string(counter);
+	char *ptr;
+	int i, mov;
 
-	write(STDERR_FILENO, name, _strlen(name));
-	write(STDERR_FILENO, ": ", 2);
-	write(STDERR_FILENO, counter_string, _strlen(counter_string));
-	write(STDERR_FILENO, ": ", 2);
-
-	free(counter_string);
-}
-
-/**
- * print_error - prints error
- *
- * @current: Shell_Info object
- * @command: the command at which the error occurd
- * @error_type: the type of error
- */
-void print_error(Shell_Info *current, char *command, int error_type)
-{
-	print_error_header(current->name, current->counter);
-
-	if (error_type == 2)
-		write(STDERR_FILENO, "exit", 4);
-	else
-		write(STDERR_FILENO, command, _strlen(command));
-	write(STDERR_FILENO, ": ", 2);
-	if (error_type == NOT_FOUND)
-		write(STDERR_FILENO, "not found\n", 10);
-	else if (error_type == NO_PERMISSION)
-		write(STDERR_FILENO, "Permission denied\n", 18);
-	else if (error_type == 2)
+	ptr = NULL;
+	mov = 0;
+	for (i = 0; _environ[i]; i++)
 	{
-		write(STDERR_FILENO, "Illegal number: ", 16);
-		write(STDERR_FILENO, command, _strlen(command));
-		write(STDERR_FILENO, "\n", 1);
+		mov = compare_env(_environ[i], name);
+		if (mov)
+		{
+			ptr = _environ[i];
+			break;
+		}
 	}
+
+	return (ptr + mov);
 }

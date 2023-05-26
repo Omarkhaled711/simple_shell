@@ -1,31 +1,50 @@
 #include "shell.h"
 
 /**
- * main - Entry point to the shell
- * @argc: arguements count
- * @argv: array of argument strings
- * @env: array of env strings
- * Return: 0
- */
-int main(int argc, char *argv[], char *env[])
+  * get_signal - take care of the  crtl + c call
+  *
+  * @sig: handle signal
+  */
+void get_signal(int sig)
 {
-	Shell_Info current;
-	int mode;
-	Path_Dir *path;
+	(void)sig;
+	write(STDOUT_FILENO, "\n($) ", 5);
+}
+/**
+ * free_memory - frees memory
+ *
+ * @shell: data structure
+ * Return: no return
+ */
+void free_memory(Shell_Info *shell)
+{
+	unsigned int i;
 
-	current.status = 0;
-	current.name = argv[0];
-	mode = get_mode(argc);
-	path = get_path_directories();
-	current.PATH = path;
-	if (mode == INTERACTIVE_MODE)
+	for (i = 0; shell->env[i]; i++)
 	{
-		start_interactive(&current, env);
+		free(shell->env[i]);
 	}
-	else
-	{
-		start_non_interactive(mode, &current, env, argv);
-	}
-	free_path_list(current.PATH);
-	exit(0);
+
+	free(shell->env);
+	free(shell->pid);
+}
+/**
+ * main - Entry point
+ *
+ * @ac: argument count
+ * @av: argument vector
+ *
+ * Return: 0 on success.
+ */
+int main(int ac, char **av)
+{
+	Shell_Info shell;
+	(void) ac;
+
+	signal(SIGINT, get_signal);
+	initialize_shell_info(&shell, av);
+	start_loop(&shell);
+	free_memory(&shell);
+	shell.status = shell.status < 0 ? 255 : shell.status;
+	return (shell.status);
 }
