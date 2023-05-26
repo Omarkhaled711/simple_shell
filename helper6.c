@@ -91,28 +91,4 @@ void free_variable_list(variable_list_t **head)
 	}
 	*head = NULL;
 }
-/**
- * cd_command - Changes the current directory.
- *
- * @shell - A pointer to the Shell_Info struct.
- * Return: 1 on success, 0 on failure.
- * int cd_command(Shell_Info *shell)
- * {
- * char *dir = shell->args[1];
- * if (dir == NULL || _strcmp("$HOME", dir) == 0 || _strcmp("~", dir) == 0
- *			|| _strcmp("--", dir) == 0)
- * {
- * return cd_home(shell);
- * }
- * if (_strcmp("-", dir) == 0)
- * {
- * return cd_pre(shell);
- * }
- * if (_strcmp(".", dir) == 0 || _strcmp("..", dir) == 0)
- * {
- * return cd_dot(shell);
- * }
- * return cd_to(shell);
- * }
-*/
 
