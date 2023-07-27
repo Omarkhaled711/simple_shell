@@ -1,6 +1,53 @@
 #include "shell.h"
 
 /**
+ * num_to_string - converts an integer to a string
+ * @num: the integer to convert
+ *
+ * Return: a pointer to the string
+ */
+char *num_to_string(int num)
+{
+	int digit_count = 0, temp = num;
+	char *result_str;
+
+	if (num < 0)
+	{
+		digit_count++;
+		temp = -num;
+	}
+	if (num == 0)
+		digit_count = 1;
+	else
+	{
+		while (temp != 0)
+		{
+			temp /= 10;
+			digit_count++;
+		}
+	}
+	result_str = malloc(sizeof(char) * (digit_count + 1));
+	if (!result_str)
+	{
+		perror("malloc");
+		return (NULL);
+	}
+	result_str[digit_count] = '\0';
+	if (num < 0)
+	{
+		result_str[0] = '-';
+		num = -num;
+	}
+	while (digit_count != 0)
+	{
+		digit_count--;
+		result_str[digit_count] = '0' + num % 10;
+		num /= 10;
+	}
+	return (result_str);
+}
+
+/**
  * _strcat - a function that concatenates two strings.
  *
  * @dest: pointer to the destination string

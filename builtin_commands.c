@@ -28,6 +28,7 @@ int print_env(Shell_Info *shell)
 	shell->status = 0;
 	return (1);
 }
+
 /**
  * exit_shell - Exits the shell with the specified status code.
  * @shell: A pointer to the Shell_Info struct.
@@ -68,27 +69,5 @@ int exit_shell(Shell_Info *shell)
 
 	return (0);
 }
-/**
- * free_variable_list - Deallocates memory for a linked list of variables.
- * @head: A pointer to the head of the linked list.
- * Return: void
-*/
-void free_variable_list(variable_list_t **head)
-{
-	variable_list_t *curr;
 
-	if (head == NULL || *head == NULL)
-	{
-		return;
-	}
-	curr = *head;
-	while (curr != NULL)
-	{
-		variable_list_t *temp = curr;
-
-		curr = curr->next;
-		free(temp);
-	}
-	*head = NULL;
-}
 

@@ -69,50 +69,35 @@ int repeated_char(char *input)
 }
 
 /**
- * compare_env - compares the env var names
- * with the name passed.
- * @env_name: name of the environment variable
- * @name: the name passed
- *
- * Return: 0 if are not equal. Another value if they are.
+ * _realloc - similar to the realloc funtionin the stldib.h
+ * @ptr: pointer to the existing memory
+ * @old_size: old size
+ * @new_size: new size
+ * Return: a void pointer
  */
-int compare_env(const char *env_name, const char *name)
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size)
 {
-	int i;
+	unsigned int i;
+	void *p;
+	char *access1, *access2;
 
-	for (i = 0; env_name[i] != '='; i++)
+	if (old_size == new_size)
+		return (ptr);
+	if (new_size == 0 && ptr != NULL)
 	{
-		if (env_name[i] != name[i])
-		{
-			return (0);
-		}
+		free(ptr);
+		return (NULL);
 	}
-
-	return (i + 1);
-}
-/**
- * _getenv - get an environment variable
- * @name: name of the environment variable
- * @_environ: environment variable
- *
- * Return: value of the environment variable if found, or NULL if not found.
- */
-char *_getenv(const char *name, char **_environ)
-{
-	char *ptr;
-	int i, mov;
-
-	ptr = NULL;
-	mov = 0;
-	for (i = 0; _environ[i]; i++)
-	{
-		mov = compare_env(_environ[i], name);
-		if (mov)
-		{
-			ptr = _environ[i];
-			break;
-		}
-	}
-
-	return (ptr + mov);
+	p = malloc(new_size);
+	if (p == 0)
+		return (NULL);
+	access1 = p;
+	access2 = ptr;
+	if (old_size > new_size)
+		old_size = new_size;
+	for (i = 0; i < old_size && ptr != NULL; i++)
+		access1[i] = access2[i];
+	if (p != ptr)
+		free(ptr);
+	return (p);
 }

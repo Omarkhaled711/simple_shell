@@ -1,34 +1,35 @@
 #include "shell.h"
 
 /**
- * get_first_character_index - Finds the index of the first
- * non-whitespace character
+ * check_syntax_error - Checks if there is a syntax error in the input string
  *
- * @input_string: The input string
- * @first_char_index: Pointer to the index of the first
- * non-whitespace character
+ * @shell_info: Pointer to the shell data structure
+ * @input_string: The input string to check
  *
- * Return: 0 on success, -1 if the first non-whitespace character is
- * a separator operator
+ * Return: 0 if there is a syntax error, 1   otherwise
  */
-int get_first_character_index(char *input_string, int *first_char_index)
+int check_syntax_error(Shell_Info *shell_info, char *input_string)
 {
-	for (*first_char_index = 0; input_string[*first_char_index];
-			(*first_char_index)++)
+	int begin_index = 0;
+	int first_char_index = 0;
+	int error_index = 0;
+
+	first_char_index = get_first_character_index(input_string, &begin_index);
+	if (first_char_index == -1)
 	{
-		if (input_string[*first_char_index] == ' '
-			|| input_string[*first_char_index] == '\t')
-			continue;
-
-		if (input_string[*first_char_index] == ';'
-			|| input_string[*first_char_index] == '|'
-				|| input_string[*first_char_index] == '&')
-			return (-1);
-
-		break;
+		print_syntax_error(shell_info, input_string, begin_index, 0);
+		return (0);
 	}
-	return (0);
+	error_index = get_error_operator_index(input_string + begin_index, 0,
+					*(input_string + begin_index));
+	if (error_index != 0)
+	{
+		print_syntax_error(shell_info, input_string, begin_index + error_index, 1);
+		return (0);
+	}
+	return (1);
 }
+
 /**
  * print_syntax_error - Prints a syntax error message
  *
@@ -126,45 +127,3 @@ int get_error_operator_index(char *input_string, int i, char last)
 	}
 	return (get_error_operator_index(input_string + 1, i + 1, *input_string));
 }
-
-/**
- * replace_variables - expanding commands if they cotain $
- *
- * @input: input command
- * @shell_info: info about shell
- * Return: char pointer (string)
- */
-char *replace_variables(char *input, Shell_Info *shell_info)
-{
-	variable_list_t *head, *current;
-	char *status_str, *modified_input;
-	int original_len, new_len;
-
-	head = NULL;
-	status_str = num_to_string(shell_info->status);
-	original_len = check_variables(&head, input, status_str, shell_info);
-
-	if (head == NULL)
-	{
-		free(status_str);
-		return (input);
-	}
-	current = head;
-	new_len = 0;
-	while (current != NULL)
-	{
-		new_len += (current->val_len - current->var_len);
-		current = current->next;
-	}
-	new_len += original_len;
-	modified_input = malloc(sizeof(char) * (new_len + 1));
-	modified_input[new_len] = 0;
-	replace_input(&head, input, modified_input, new_len);
-
-	free(input);
-	free(status_str);
-	free_variable_list(&head);
-
-	return (modified_input);
-}
-

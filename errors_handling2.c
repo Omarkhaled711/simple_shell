@@ -78,71 +78,44 @@ char *concat_cd(Shell_Info *shell, char *msg, char *error, char *counter)
 	return (error);
 }
 /**
- * add_sep_nodes - adds a node to the separator list
+ * check_error_access - verifies if user has permissions to access
  *
- * @head_s: head of separator
- * @input: the command input
+ * @dir: destination directory
+ * @shell: data structure
+ *
+ * Return: 1 if there is an error, 0 if not
  */
-void add_sep_nodes(separator_list_node_t **head_s, char *input)
+int check_error_access(char *dir, Shell_Info *shell)
 {
-	int i;
+	int end_value = 0;
 
-	convert_special_chars(input, 0);
-
-	for (i = 0; input[i]; i++)
+	switch (!dir)
 	{
-		if (input[i] == ';')
-			add_separator_node(head_s, input[i]);
-
-		if (input[i] == '|' || input[i] == '&')
-		{
-			add_separator_node(head_s, input[i]);
-			i++;
-		}
+		case 1:
+			get_error(shell, COMMAND_NOT_FOUND_ERROR);
+			end_value = 1;
+			break;
+		default:
+			switch (_strcmp(shell->args[0], dir))
+			{
+				case 0:
+					if (access(shell->args[0], X_OK) == -1)
+					{
+						get_error(shell, PERMISSION_ERROR);
+						end_value = 1;
+					}
+					break;
+				default:
+					if (access(dir, X_OK) == -1)
+					{
+						get_error(shell, PERMISSION_ERROR);
+						end_value = 1;
+					}
+					free(dir);
+					break;
+			}
+			break;
 	}
-}
-/**
- * add_command_nodes - adds a node to the command list
- *
- * @head_c: head of commands
- * @input: the command input
- */
-void add_command_nodes(commands_list_node_t **head_c, char *input)
-{
-	char *line;
 
-	line = strtok(input, ";|&");
-	do {
-		convert_special_chars(line, 1);
-		add_command_node(head_c, line);
-		line = strtok(NULL, ";|&");
-	} while (line != NULL);
-}
-/**
- * convert_special_chars - converts | and & to non-printed chars and vice-versa
- *
- * @input: input string
- * @bool: type of converting
- *
- * Return: None
- */
-void convert_special_chars(char *input, int bool)
-{
-	int i, non_printable1 = 5, non_printable2 = 6;
-
-	for (i = 0; input[i]; i++)
-	{
-		if (bool == 0)
-		{
-			if (input[i] == '|' && input[i + 1] != '|')
-				input[i] = non_printable1;
-			else if (input[i] == '&' && input[i + 1] != '&')
-				input[i] = non_printable2;
-		}
-		else
-		{
-			input[i] = (input[i] == non_printable1 ? '|' : input[i]);
-			input[i] = (input[i] == non_printable2 ? '&' : input[i]);
-		}
-	}
+	return (end_value);
 }

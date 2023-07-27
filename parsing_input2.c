@@ -1,56 +1,32 @@
 #include "shell.h"
 
 /**
- * replace_input - expands the input if it contains a var
+ * convert_special_chars - converts | and & to non-printed chars and vice-versa
  *
- * @head: head to var list
- * @input: the input command
- * @modified_input: the new input
- * @new_len: the new len
- * Return: void
+ * @input: input string
+ * @bool: type of converting
+ *
+ * Return: None
  */
-void replace_input(variable_list_t **head, char *input, char *modified_input,
-					int new_len)
+void convert_special_chars(char *input, int bool)
 {
-	variable_list_t *current;
-	int i, j;
+	int i, non_printable1 = 5, non_printable2 = 6;
 
-	current = *head;
-	for (i = 0, j = 0; i < new_len; i++, j++)
+	for (i = 0; input[i]; i++)
 	{
-		if (input[j] == '$')
+		if (bool == 0)
 		{
-			if (current && current->var_len > 0 && current->val_len > 0)
-			{
-				modified_input = copy_variable_value(current, modified_input, &i);
-				j += current->var_len;
-				current = current->next;
-			}
-			else
-			{
-				modified_input[i] = input[j];
-			}
+			if (input[i] == '|' && input[i + 1] != '|')
+				input[i] = non_printable1;
+			else if (input[i] == '&' && input[i + 1] != '&')
+				input[i] = non_printable2;
 		}
 		else
 		{
-			modified_input[i] = input[j];
+			input[i] = (input[i] == non_printable1 ? '|' : input[i]);
+			input[i] = (input[i] == non_printable2 ? '&' : input[i]);
 		}
 	}
-}
-
-char *copy_variable_value(variable_list_t *variable, char *modified_input,
-						int *index)
-{
-	int i, j;
-
-	for (i = 0, j = *index; i < variable->val_len; i++, j++)
-	{
-		modified_input[j] = variable->value[i];
-	}
-
-	*index = j - 1;
-
-	return (modified_input);
 }
 
 /**
@@ -100,49 +76,8 @@ int check_variables(variable_list_t **var_list, char *input, char *status,
 
 	return (i);
 }
-/**
- * add_variable_node - adds a variable to the end of a variable_list_t list.
- *
- * @head: pointer to the head of the linked list.
- * @var_length: length of the variable name.
- * @value: pointer to the value of the variable.
- * @value_length: length of the value of the variable.
- *
- * Return: pointer to the head of the linked list.
- */
-variable_list_t *add_variable_node(variable_list_t **head, int var_length,
-					char *value, int value_length)
-{
-	variable_list_t *new_node, *temp_node;
 
-	new_node = malloc(sizeof(variable_list_t));
-	if (new_node == NULL)
-	{
-		perror("malloc error");
-		return (NULL);
-	}
 
-	new_node->var_len = var_length;
-	new_node->value = value;
-	new_node->val_len = value_length;
-	new_node->next = NULL;
-
-	if (*head == NULL)
-	{
-		*head = new_node;
-	}
-	else
-	{
-		temp_node = *head;
-		while (temp_node->next != NULL)
-		{
-			temp_node = temp_node->next;
-		}
-		temp_node->next = new_node;
-	}
-
-	return (*head);
-}
 /**
  * check_environment_variable - checks if the input string is an
  *  environment variable
